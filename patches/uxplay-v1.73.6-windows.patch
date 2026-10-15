@@ -1,0 +1,347 @@
+diff --git a/lib/compat.h b/lib/compat.h
+index 4ccfb02..4455931 100644
+--- a/lib/compat.h
++++ b/lib/compat.h
+@@ -16,10 +16,26 @@
+ #define COMPAT_H
+ 
+ #if defined(WIN32)
++#include <winsock2.h>
+ #include <ws2tcpip.h>
+ #include <windows.h>
+-#ifndef snprintf
+-#define snprintf _snprintf
++#include <time.h>
++#ifndef CLOCK_REALTIME
++#define CLOCK_REALTIME 0
++static __inline int uxplay_clock_gettime(int clock_id, struct timespec *ts)
++{
++    FILETIME file_time;
++    ULARGE_INTEGER ticks;
++    (void) clock_id;
++    GetSystemTimePreciseAsFileTime(&file_time);
++    ticks.LowPart = file_time.dwLowDateTime;
++    ticks.HighPart = file_time.dwHighDateTime;
++    ticks.QuadPart -= 116444736000000000ULL;
++    ts->tv_sec = (time_t) (ticks.QuadPart / 10000000ULL);
++    ts->tv_nsec = (long) ((ticks.QuadPart % 10000000ULL) * 100ULL);
++    return 0;
++}
++#define clock_gettime uxplay_clock_gettime
+ #endif
+ #else
+ #include <sys/types.h>
+diff --git a/lib/dnssd.c b/lib/dnssd.c
+index d041ee7..9a7b93a 100644
+--- a/lib/dnssd.c
++++ b/lib/dnssd.c
+@@ -33,7 +33,9 @@
+ #endif
+ 
+ #include "compat.h"
++#if !defined(_WIN32)
+ #include <dns_sd.h>
++#endif
+ #include "dnssd.h"
+ 
+ #include "dnssdint.h"
+@@ -63,9 +65,7 @@
+ # endif
+ 
+ typedef struct _DNSServiceRef_t *DNSServiceRef;
+-#ifndef _WIN32
+ typedef union _TXTRecordRef_t { char PrivateData[16]; char *ForceNaturalAlignment; } TXTRecordRef;
+-#endif
+ typedef uint32_t DNSServiceFlags;
+ typedef int32_t  DNSServiceErrorType;
+ 
+diff --git a/lib/httpd.c b/lib/httpd.c
+index 56a3742..930ea52 100644
+--- a/lib/httpd.c
++++ b/lib/httpd.c
+@@ -190,6 +190,14 @@ httpd_init(logger_t *logger, httpd_callbacks_t *callbacks, int nohold)
+     /* Initial status joined */
+     httpd->running = 0;
+     httpd->joined = 1;
++    httpd->server_fd4 = -1;
++    httpd->server_fd6 = -1;
++
++    if (MUTEX_CREATE(httpd->run_mutex) != 0) {
++        free(httpd->connections);
++        free(httpd);
++        return NULL;
++    }
+ 
+     return httpd;
+ }
+@@ -199,6 +207,7 @@ httpd_destroy(httpd_t *httpd)
+ {
+     if (httpd) {
+         httpd_stop(httpd);
++        MUTEX_DESTROY(httpd->run_mutex);
+         free(httpd->connections);
+         free(httpd);
+     }
+@@ -680,14 +689,20 @@ httpd_start(httpd_t *httpd, unsigned short *port)
+     if (httpd->server_fd4 != -1 && listen(httpd->server_fd4, backlog) == -1) {
+         logger_log(httpd->logger, LOGGER_ERR, "Error listening to IPv4 socket");
+         CLOSESOCKET(httpd->server_fd4);
+-        CLOSESOCKET(httpd->server_fd6);
++        httpd->server_fd4 = -1;
++        if (httpd->server_fd6 != -1) {
++            CLOSESOCKET(httpd->server_fd6);
++            httpd->server_fd6 = -1;
++        }
+         MUTEX_UNLOCK(httpd->run_mutex);
+         return -2;
+     }
+     if (httpd->server_fd6 != -1 && listen(httpd->server_fd6, backlog) == -1) {
+         logger_log(httpd->logger, LOGGER_ERR, "Error listening to IPv6 socket");
+         CLOSESOCKET(httpd->server_fd4);
++        httpd->server_fd4 = -1;
+         CLOSESOCKET(httpd->server_fd6);
++        httpd->server_fd6 = -1;
+         MUTEX_UNLOCK(httpd->run_mutex);
+         return -2;
+     }
+@@ -696,7 +711,22 @@ httpd_start(httpd_t *httpd, unsigned short *port)
+     /* Set values correctly and create new thread */
+     httpd->running = 1;
+     httpd->joined = 0;
+-    THREAD_CREATE(httpd->thread, httpd_thread, httpd);
++    int thread_error = THREAD_CREATE(httpd->thread, httpd_thread, httpd);
++    if (thread_error != 0) {
++        logger_log(httpd->logger, LOGGER_ERR, "Error creating httpd thread: %d", thread_error);
++        httpd->running = 0;
++        httpd->joined = 1;
++        if (httpd->server_fd4 != -1) {
++            CLOSESOCKET(httpd->server_fd4);
++            httpd->server_fd4 = -1;
++        }
++        if (httpd->server_fd6 != -1) {
++            CLOSESOCKET(httpd->server_fd6);
++            httpd->server_fd6 = -1;
++        }
++        MUTEX_UNLOCK(httpd->run_mutex);
++        return -3;
++    }
+     MUTEX_UNLOCK(httpd->run_mutex);
+ 
+     return 1;
+@@ -722,7 +752,9 @@ httpd_stop(httpd_t *httpd)
+     assert(httpd);
+ 
+     MUTEX_LOCK(httpd->run_mutex);
+-    if (!httpd->running || httpd->joined) {
++    /* A worker can clear running after a socket error before it returns.  It
++     * still owns a joinable thread until joined is set below. */
++    if (httpd->joined) {
+         MUTEX_UNLOCK(httpd->run_mutex);
+         return;
+     }
+diff --git a/lib/raop.c b/lib/raop.c
+index 7098fae..84d16c8 100644
+--- a/lib/raop.c
++++ b/lib/raop.c
+@@ -846,7 +846,9 @@ raop_start_httpd(raop_t *raop, unsigned short *port) {
+ void
+ raop_stop_httpd(raop_t *raop) {
+     assert(raop);
+-    httpd_stop(raop->httpd);
++    if (raop->httpd) {
++        httpd_stop(raop->httpd);
++    }
+ }
+ 
+ void raop_remove_known_connections(raop_t * raop) {
+diff --git a/lib/raop_ntp.c b/lib/raop_ntp.c
+index 7da009d..e214645 100644
+--- a/lib/raop_ntp.c
++++ b/lib/raop_ntp.c
+@@ -433,8 +433,17 @@ raop_ntp_start(raop_ntp_t *raop_ntp, unsigned short *timing_lport)
+     /* Create the thread and initialize running values */
+     raop_ntp->running = 1;
+     raop_ntp->joined = 0;
+-    
+-    THREAD_CREATE(raop_ntp->thread, raop_ntp_thread, raop_ntp);
++
++    int thread_error = THREAD_CREATE(raop_ntp->thread, raop_ntp_thread, raop_ntp);
++    if (thread_error != 0) {
++        logger_log(raop_ntp->logger, LOGGER_ERR, "raop_ntp creating timing thread failed: %d", thread_error);
++        raop_ntp->running = 0;
++        raop_ntp->joined = 1;
++        if (raop_ntp->tsock != -1) {
++            CLOSESOCKET(raop_ntp->tsock);
++            raop_ntp->tsock = -1;
++        }
++    }
+     MUTEX_UNLOCK(raop_ntp->run_mutex);
+ }
+ 
+diff --git a/lib/raop_rtp.c b/lib/raop_rtp.c
+index 413de24..2a36dd9 100644
+--- a/lib/raop_rtp.c
++++ b/lib/raop_rtp.c
+@@ -703,7 +703,20 @@ raop_rtp_start_audio(raop_rtp_t *raop_rtp,  unsigned short *control_rport, unsig
+     raop_rtp->running = 1;
+     raop_rtp->joined = 0;
+ 
+-    THREAD_CREATE(raop_rtp->thread, raop_rtp_thread_udp, raop_rtp);
++    int thread_error = THREAD_CREATE(raop_rtp->thread, raop_rtp_thread_udp, raop_rtp);
++    if (thread_error != 0) {
++        logger_log(raop_rtp->logger, LOGGER_ERR, "raop_rtp creating audio thread failed: %d", thread_error);
++        raop_rtp->running = 0;
++        raop_rtp->joined = 1;
++        if (raop_rtp->csock != -1) {
++            CLOSESOCKET(raop_rtp->csock);
++            raop_rtp->csock = -1;
++        }
++        if (raop_rtp->dsock != -1) {
++            CLOSESOCKET(raop_rtp->dsock);
++            raop_rtp->dsock = -1;
++        }
++    }
+     MUTEX_UNLOCK(raop_rtp->run_mutex);
+ }
+ 
+diff --git a/lib/raop_rtp_mirror.c b/lib/raop_rtp_mirror.c
+--- a/lib/raop_rtp_mirror.c
++++ b/lib/raop_rtp_mirror.c
+@@ -55,7 +55,7 @@
+ #define SEC SECOND_IN_NSECS
+ 
+ /* for MacOS, where SOL_TCP and TCP_KEEPIDLE are not defined */
+-#if !defined(SOL_TCP) && defined(IPPROTO_TCP)
++#if !defined(SOL_TCP)
+ #define SOL_TCP IPPROTO_TCP
+ #endif
+ #if !defined(TCP_KEEPIDLE) && defined(TCP_KEEPALIVE)
+@@ -256,7 +256,15 @@ raop_rtp_mirror_thread(void *arg)
+                 break;
+             }
+ 
+-            // We're calling recv for a certain amount of data, so we need a timeout
++            // recv must yield on partial headers/payloads so stop can join promptly.
++#ifdef WIN32
++            u_long nonblocking = 1;
++            if (ioctlsocket(stream_fd, FIONBIO, &nonblocking) != 0) {
++                logger_log(raop_rtp_mirror->logger, LOGGER_ERR,
++                           "raop_rtp_mirror could not make stream nonblocking");
++                break;
++            }
++#else
+             struct timeval tv;
+             tv.tv_sec = 0;
+             tv.tv_usec = 5000;
+@@ -266,6 +274,9 @@ raop_rtp_mirror_thread(void *arg)
+                            "raop_rtp_mirror could not set stream socket timeout %d %s", sock_err, SOCKET_ERROR_STRING(sock_err));
+                 break;
+             }
++#endif
++            logger_log(raop_rtp_mirror->logger, LOGGER_INFO,
++                       "raop_rtp_mirror video TCP connection accepted");
+ 
+             int option = 1;
+             if (setsockopt(stream_fd, SOL_SOCKET, SO_KEEPALIVE, CAST &option, sizeof(option)) < 0) {
+@@ -310,9 +321,10 @@ raop_rtp_mirror_thread(void *arg)
+             if (payload == NULL && ret == 0) {
+                 logger_log(raop_rtp_mirror->logger, LOGGER_DEBUG,
+                            "raop_rtp_mirror tcp socket was closed by client (recv returned 0); got %d bytes of 128 byte header",readstart);
+-                FD_CLR(stream_fd, &rfds);
+-                stream_fd = -1;
+-                continue;
++                // Keep ownership until the common cleanup closes the socket.
++                // A new connection needs a new session and encryption state.
++                conn_reset = true;
++                break;
+             } else if (payload == NULL && ret == -1) {
+                 int sock_err = SOCKET_GET_ERROR();
+                 if (sock_err == SOCKET_ERRORNAME(EAGAIN) || sock_err == SOCKET_ERRORNAME(EWOULDBLOCK)) continue; // Timeouts can happen even if the connection is fine
+@@ -834,8 +846,13 @@ raop_rtp_mirror_thread(void *arg)
+     }
+     /* Close the stream file descriptor */
+     if (stream_fd != -1) {
++#ifdef WIN32
++        shutdown(stream_fd, SD_BOTH);
++#endif
+         CLOSESOCKET(stream_fd);
+     }
++    free(payload);
++    free(sps_pps);
+ 
+     // Ensure running reflects the actual state
+     MUTEX_LOCK(raop_rtp_mirror->run_mutex);
+@@ -851,8 +868,8 @@ raop_rtp_mirror_thread(void *arg)
+     }
+ 
+     if (unsupported_codec) {
+-        CLOSESOCKET(raop_rtp_mirror->mirror_data_sock);
+-        raop_rtp_mirror_stop(raop_rtp_mirror);
++        // The owning control thread joins us and closes the listener.
++        // Calling stop here would attempt to join this very thread.
+         raop_rtp_mirror->callbacks.video_reset(raop_rtp_mirror->callbacks.cls, RESET_TYPE_RTP_SHUTDOWN);
+     }
+ 
+@@ -922,11 +939,19 @@ raop_rtp_mirror_start(raop_rtp_mirror_t *raop_rtp_mirror, unsigned short *mirror
+     /* Create the thread and initialize running values */
+     raop_rtp_mirror->running = 1;
+     raop_rtp_mirror->joined = 0;
+-    if (raop_rtp_mirror->callbacks.mirror_video_running) {
++
++    int thread_error = THREAD_CREATE(raop_rtp_mirror->thread_mirror, raop_rtp_mirror_thread, raop_rtp_mirror);
++    if (thread_error != 0) {
++        logger_log(raop_rtp_mirror->logger, LOGGER_ERR, "raop_rtp_mirror creating video thread failed: %d", thread_error);
++        raop_rtp_mirror->running = 0;
++        raop_rtp_mirror->joined = 1;
++        if (raop_rtp_mirror->mirror_data_sock != -1) {
++            CLOSESOCKET(raop_rtp_mirror->mirror_data_sock);
++            raop_rtp_mirror->mirror_data_sock = -1;
++        }
++    } else if (raop_rtp_mirror->callbacks.mirror_video_running) {
+         raop_rtp_mirror->callbacks.mirror_video_running(raop_rtp_mirror->callbacks.cls, true);
+     }
+-
+-    THREAD_CREATE(raop_rtp_mirror->thread_mirror, raop_rtp_mirror_thread, raop_rtp_mirror);
+     MUTEX_UNLOCK(raop_rtp_mirror->run_mutex);
+ }
+ 
+@@ -936,7 +961,7 @@ void raop_rtp_mirror_stop(raop_rtp_mirror_t *raop_rtp_mirror) {
+     /* Check that we are running and thread is not
+      * joined (should never be while still running) */
+     MUTEX_LOCK(raop_rtp_mirror->run_mutex);
+-    if (!raop_rtp_mirror->running || raop_rtp_mirror->joined) {
++    if (raop_rtp_mirror->joined) {
+         MUTEX_UNLOCK(raop_rtp_mirror->run_mutex);
+         return;
+     }
+ 
+diff --git a/lib/threads.h b/lib/threads.h
+index d9881da..a8bee7f 100644
+--- a/lib/threads.h
++++ b/lib/threads.h
+@@ -18,18 +18,20 @@
+ #ifndef THREADS_H
+ #define THREADS_H
+ 
+-/* Always use pthread library */
+-
++#if defined(WIN32) || defined(_WIN32)
++#include <windows.h>
++#include <pthread.h>
++#define sleepms(x) Sleep(x)
++#else
+ #include <pthread.h>
+ #include <unistd.h>
+-
+ #define sleepms(x) usleep((x)*1000)
++#endif
+ 
+ typedef pthread_t thread_handle_t;
+ 
+ #define THREAD_RETVAL void *
+-#define THREAD_CREATE(handle, func, arg) \
+-	if (pthread_create(&(handle), NULL, func, arg)) handle = 0
++#define THREAD_CREATE(handle, func, arg) pthread_create(&(handle), NULL, func, arg)
+ #define THREAD_JOIN(handle) pthread_join(handle, NULL)
+ 
+ typedef pthread_mutex_t mutex_handle_t;

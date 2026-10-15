@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "dependencies": {
+    "uxplay": {
+      "version": "1.73.6",
+      "commit": "21eef8df25d91e12635c36d8176ad192725baca2",
+      "url": "https://codeload.github.com/FDH2/UxPlay/zip/21eef8df25d91e12635c36d8176ad192725baca2",
+      "archiveFile": "UxPlay-21eef8df25d91e12635c36d8176ad192725baca2.zip",
+      "archiveRoot": "UxPlay-21eef8df25d91e12635c36d8176ad192725baca2",
+      "sha256": "27ECE3E90C6DFECFB288F7DE7396B34C8F4BAC393E9AEE1D452BE0D6B1C3EC81"
+    },
+    "obsSdk": {
+      "version": "30.0.0",
+      "url": "https://codeload.github.com/obsproject/obs-studio/zip/refs/tags/30.0.0",
+      "archiveFile": "obs-studio-30.0.0.zip",
+      "archiveRoot": "obs-studio-30.0.0",
+      "sha256": "2BFDADF5F46BA56276D588B77653A10B9E2B2E3C05D8029B27A25B8ADA9AB474"
+    },
+    "ffmpegSdk": {
+      "version": "n8.1.2-46-g139afe709a",
+      "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-26-13-06/ffmpeg-n8.1.2-46-g139afe709a-win64-lgpl-shared-8.1.zip",
+      "archiveFile": "ffmpeg-n8.1.2-46-g139afe709a-win64-lgpl-shared-8.1.zip",
+      "archiveRoot": "ffmpeg-n8.1.2-46-g139afe709a-win64-lgpl-shared-8.1",
+      "sha256": "030F498B2D14AF6E408CEFC6553E2AF837DD6FB9CF48C701D638F17186E75816"
+    },
+    "libplist": {
+      "version": "2.7.0",
+      "url": "https://codeload.github.com/libimobiledevice/libplist/zip/refs/tags/2.7.0",
+      "archiveFile": "libplist-2.7.0.zip",
+      "archiveRoot": "libplist-2.7.0",
+      "sha256": "27DF166E380CADCE555027BA1CA081B0FF96963F6F68BD89FAE0AE5E90C9F174"
+    },
+    "openssl": {
+      "version": "3.5.5",
+      "url": "https://api.nuget.org/v3-flatcontainer/openssl-native/3.5.5/openssl-native.3.5.5.nupkg",
+      "archiveFile": "openssl-native.3.5.5.nupkg",
+      "archiveRoot": "openssl-native-3.5.5",
+      "sha256": "3FF0C628D2E77B72166EF618B51D4F2CE0B9EBE5BE004E7CCE20EF102EE9FAF7"
+    }
+  },
+  "repositoryFiles": {
+    "uxplayPatch": {
+      "path": "patches/uxplay-v1.73.6-windows.patch",
+      "sha256": "11F4B74459A80B707641BA733DC3CEC9774C4F8F13E8C08DED523D42CE4A80C3"
+    },
+    "obsConfig": {
+      "path": "dependency-overlays/obs-studio-30.0.0/obsconfig.h",
+      "sha256": "586A9F000A8F5B421E3F1549FB03367CE83CCD745D168879A76CD27A6F632712"
+    },
+    "libplistConfig": {
+      "path": "dependency-overlays/libplist-2.7.0/config.h",
+      "sha256": "C44026D1A58F16F0526F9F2C1DD9C122562A75ABCE10286E6A3528D34F6AF86A"
+    },
+    "libplistCmake": {
+      "path": "dependency-overlays/libplist-2.7.0/CMakeLists.txt",
+      "sha256": "E64E1D873A130D737BD49406F76BFAF14542F35D0155D7F20A3497E8A08B3C8F"
+    },
+    "uxplayCmake": {
+      "path": "dependency-overlays/uxplay-v1.73.6/CMakeLists.txt",
+      "sha256": "57DF6EEEC09FC2ADE46DA19835C3EA2A5E0D70202F222625D8DDEA96FA3B08BE"
+    },
+    "obsDef": {
+      "path": "dependency-overlays/import-libs/obs.def",
+      "sha256": "5E21C62440EA3E97EFB44FA9F44A2D9D94951C80A06D8B3F7B8F4223F8CDB2BF"
+    },
+    "pthreadDef": {
+      "path": "dependency-overlays/import-libs/w32-pthreads.def",
+      "sha256": "CD46DB7230640AEC89911165D92F5653C39EAB4056ACA91F3423D4A92289D832"
+    }
+  }
+}

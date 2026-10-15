@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "snapshotDate": "2026-10-15",
+  "status": "source-preview-no-binary-distribution",
+  "scope": "standalone OBS native AirPlay receiver only",
+  "license": "GPL-3.0-only; upstream notices retained",
+  "upstreamBaseCommit": "a1b57cd56b276e7e2d381c8083f76cd80e2a2e0b",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 348,
+      "sha256": "b6a607c8b189a11228deeafebce742265a2dea6f2125682e8b5bc8b2b41fb41d"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 409,
+      "sha256": "f25f80a05604b9997c90b8898d362c6430d51df6b65e91dfe1a7c48f61301ed9"
+    },
+    {
+      "path": "CMakeLists.txt",
+      "bytes": 5291,
+      "sha256": "d3c0dd0383641da27e1cb2020b4689d0ef3ff326e304bc9806b3201d25e51c82"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 35151,
+      "sha256": "7fe14716ed31cc71fc3bf9af293c368d464a853a70ea86e9995388f6b9e929e5"
+    },
+    {
+      "path": "LICENSES/GPL-3.0.txt",
+      "bytes": 35151,
+      "sha256": "7fe14716ed31cc71fc3bf9af293c368d464a853a70ea86e9995388f6b9e929e5"
+    },
+    {
+      "path": "LICENSES/LGPL-2.1-or-later.txt",
+      "bytes": 26003,
+      "sha256": "6d532f37b1e13cb6a8409c72bf8c019e94a2f5ebad1efde36716b0ad02486d69"
+    },
+    {
+      "path": "LICENSES/OpenSSL-Apache-2.0.txt",
+      "bytes": 10350,
+      "sha256": "358701db62c062afc39e0aed4f6641604e426cb61d12ab01c2913f92ce0fbb01"
+    },
+    {
+      "path": "LICENSES/aomkoyo-LGPL-2.1-or-later-NOTICE.txt",
+      "bytes": 1026,
+      "sha256": "9abdcf487784642357bccbdb9a1bbfa7a933c2d8f2aab1019bdd561a965e0add"
+    },
+    {
+      "path": "LICENSES/llhttp-MIT.txt",
+      "bytes": 1105,
+      "sha256": "ebca854e0134cd256d673627c20499f42577eb74bacf08b9f25b626a73c91277"
+    },
+    {
+      "path": "NOTICE.md",
+      "bytes": 2005,
+      "sha256": "28c474732d56b4f8e8defc5a4499761d71b9f8f051aef1454493c7fbc123d303"
+    },
+    {
+      "path": "PROVENANCE.md",
+      "bytes": 3573,
+      "sha256": "651764577bde63be951a016006b429eb99975c9876005b3317005582f037dc08"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3611,
+      "sha256": "35c34fc9527ed582ff077d09e761bad75aa2707eda36ab5b9efa83babe74c265"
+    },
+    {
+      "path": "RELEASE-GATE.md",
+      "bytes": 2105,
+      "sha256": "54f8ac74b5d4d9275ee8e973f2d08c9658e8940a10014062d7e0a76be36902d4"
+    },
+    {
+      "path": "SOURCE-FILES.txt",
+      "bytes": 1332,
+      "sha256": "548618aec9dc0bd6ad82aba9c500ccdebba843e24316d631c8db0eb7807e0fd4"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "bytes": 2568,
+      "sha256": "5c16d80e6dd4d64b03fb2eb61bb6c690fc741163bd0bfe397c8465aad010804f"
+    },
+    {
+      "path": "build.bat",
+      "bytes": 4233,
+      "sha256": "2c25fbc12e7c396b278010ea56fba245bb7efe6f82314655266e55b421a728ef"
+    },
+    {
+      "path": "data/locale/en-US.ini",
+      "bytes": 2825,
+      "sha256": "2b2d0a0d12a4caea11128f4d6a677fde269cb54e10972047c51307f7b88b79ef"
+    },
+    {
+      "path": "data/locale/zh-CN.ini",
+      "bytes": 2789,
+      "sha256": "7324221cef82433c1a5b2c03b4e5f95111ddf80d97880ff8630faa173a0646c6"
+    },
+    {
+      "path": "dependencies.lock.json",
+      "bytes": 3136,
+      "sha256": "a08bd129bcbf4389085cddf7b72869fe5fae46f21d6812de9093b49881844e79"
+    },
+    {
+      "path": "dependency-overlays/import-libs/obs.def",
+      "bytes": 872,
+      "sha256": "5e21c62440ea3e97efb44fa9f44a2d9d94951c80a06d8b3f7b8f4223f8cdb2bf"
+    },
+    {
+      "path": "dependency-overlays/import-libs/w32-pthreads.def",
+      "bytes": 309,
+      "sha256": "cd46db7230640aec89911165d92f5653c39eab4056aca91f3423d4a92289d832"
+    },
+    {
+      "path": "dependency-overlays/libplist-2.7.0/CMakeLists.txt",
+      "bytes": 860,
+      "sha256": "e64e1d873a130d737bd49406f76bfaf14542f35d0155d7f20a3497e8a08b3c8f"
+    },
+    {
+      "path": "dependency-overlays/libplist-2.7.0/config.h",
+      "bytes": 386,
+      "sha256": "c44026d1a58f16f0526f9f2c1dd9c122562a75abce10286e6a3528d34f6af86a"
+    },
+    {
+      "path": "dependency-overlays/obs-studio-30.0.0/obsconfig.h",
+      "bytes": 189,
+      "sha256": "586a9f000a8f5b421e3f1549fb03367ce83ccd745d168879a76cd27a6f632712"
+    },
+    {
+      "path": "dependency-overlays/uxplay-v1.73.6/CMakeLists.txt",
+      "bytes": 3003,
+      "sha256": "57df6eeec09fc2ade46da19835c3ea2a5e0d70202f222625d8ddea96fa3b08be"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "bytes": 3818,
+      "sha256": "65f3798dfb11a68e1c0490f7b709983321757eb92756405f85cb55c3d4fbe71e"
+    },
+    {
+      "path": "docs/TEST-CHECKLIST.md",
+      "bytes": 1925,
+      "sha256": "491d020383a40310f8cc47c80cc3e16444c0f6c594267a9c96504a691d232f79"
+    },
+    {
+      "path": "install.bat",
+      "bytes": 6838,
+      "sha256": "0e65cf6f268ba730a38b9c214098539bd0561c9d7f8a6b97b19214e8115a8b4e"
+    },
+    {
+      "path": "installer.iss",
+      "bytes": 8160,
+      "sha256": "41337ab3fd7dc4e2b4b2b5a3a0e026099047571827c04372f936218589b22082"
+    },
+    {
+      "path": "patches/uxplay-v1.73.6-windows.patch",
+      "bytes": 12160,
+      "sha256": "11f4b74459a80b707641ba733dc3cec9774c4f8f13e8c08ded523d42ce4a80c3"
+    },
+    {
+      "path": "scripts/check-source.ps1",
+      "bytes": 4558,
+      "sha256": "157332ae1d33945302b6a99f6952a0cd52aa62505f37c12923161fe96cd6c9ab"
+    },
+    {
+      "path": "scripts/mirror-reconnect-smoke.c",
+      "bytes": 3427,
+      "sha256": "3e9ca285e1ec6fa1eb7ef03b48bb770ed4f9235b88134b92bef940ed3652b262"
+    },
+    {
+      "path": "scripts/obs-host-load-smoke.c",
+      "bytes": 1676,
+      "sha256": "2d19091445a5e09477291a5cee820e4761892bb3919b312c356077de89ce2c59"
+    },
+    {
+      "path": "scripts/obs-managed-lifecycle-smoke.c",
+      "bytes": 15099,
+      "sha256": "e26126e9317d471e9300263b97b45c3975682038dfba630975f2416e495e59ca"
+    },
+    {
+      "path": "scripts/obs-module-registration-smoke.c",
+      "bytes": 5550,
+      "sha256": "c589bb20c61889886685128b3427c3f56ee88bce62f6f253b2dda26f1c1ea4d9"
+    },
+    {
+      "path": "scripts/package-binary.ps1",
+      "bytes": 29244,
+      "sha256": "3f8dda4f9831e423808dc4a622e2fc28ee55b93ca13752feaae8ac1111cd51a2"
+    },
+    {
+      "path": "scripts/package-source.ps1",
+      "bytes": 3493,
+      "sha256": "4be06bc0de62433ad9ac687f4f5b50639805b2d18f07b7b722f3f20aa31e0dcf"
+    },
+    {
+      "path": "scripts/prepare-deps.ps1",
+      "bytes": 40088,
+      "sha256": "c4c633caf503af05cc015d08f85a4c583ef85e958e39c348a180a6a970718c55"
+    },
+    {
+      "path": "src/airplay-source.c",
+      "bytes": 50753,
+      "sha256": "bef68c8a2ac90b4523bff7704a42e2a8ffafd435a90c685b55c18c97ae75df36"
+    },
+    {
+      "path": "src/airplay-source.h",
+      "bytes": 116,
+      "sha256": "acf9cbaf45af88b60b1abdc53e7807c9219c069c90f326d5ecca75b444cf7f1a"
+    },
+    {
+      "path": "src/audio-decoder.c",
+      "bytes": 11143,
+      "sha256": "3b3acaa9692a5003aa3f029a28178188a74f60c1cc1fe47122884f398583ec6a"
+    },
+    {
+      "path": "src/audio-decoder.h",
+      "bytes": 1281,
+      "sha256": "15640655f259f6504f8d62debdbe6332c5d272ec7305d0aeb38bab0ee4671418"
+    },
+    {
+      "path": "src/frontend-controller.c",
+      "bytes": 7416,
+      "sha256": "4414ca58cfb821b7793cb5edb715ba43b8d858775351b496af46c172010d9e31"
+    },
+    {
+      "path": "src/frontend-controller.h",
+      "bytes": 312,
+      "sha256": "fb49cadb9a5c837b2fb0f0562fa86c5da6a1d2b8d4b8239517743294b529703b"
+    },
+    {
+      "path": "src/log.h",
+      "bytes": 381,
+      "sha256": "df4553b183617f041fbe2cd319ca28fb5eea1c03ede2c8c735248ee8dc55489b"
+    },
+    {
+      "path": "src/plugin-main.c",
+      "bytes": 830,
+      "sha256": "1de956233f4cf1ad3e288f23807f1645c5248b44c4eb5aa33ea4df903eca69de"
+    },
+    {
+      "path": "src/status-frame.c",
+      "bytes": 7742,
+      "sha256": "fcf6791ff71cb2486daaddef66efdcbe03fc5908397bca93373d5570707e9a2d"
+    },
+    {
+      "path": "src/status-frame.h",
+      "bytes": 685,
+      "sha256": "022f549e09ee034633ce02a3669391db3035d61275fd633aa30bbc372b0c407c"
+    },
+    {
+      "path": "src/video-decoder.c",
+      "bytes": 9364,
+      "sha256": "911698da53d659e518929d32c5494cadf13c806b3480a1815af353c0b4f9c991"
+    },
+    {
+      "path": "src/video-decoder.h",
+      "bytes": 884,
+      "sha256": "6a60e078935ef2027fac17210929cb4532e0acdad2cdfb6182e05744e4489e60"
+    },
+    {
+      "path": "uninstall.bat",
+      "bytes": 1776,
+      "sha256": "4f59c0e7d90498f7a84b07ee098498721c02b0754281a1ec3a257c256d35d200"
+    }
+  ]
+}
